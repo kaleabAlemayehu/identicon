@@ -1,22 +1,44 @@
 package identicon
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
-	"fmt"
+	"hash"
 
 	"image"
 	"image/color"
 	"image/png"
-
-	"log"
-	"os"
 )
 
-func render(data string) {
-	h := sha1.New()
-	h.Write([]byte(data))
-	hVal := binary.BigEndian.Uint64(h.Sum(nil)[0:8])
+type Identicon struct {
+	sqSize int
+	rows   int
+	cols   int
+	h      hash.Hash
+}
+
+func New5X5() *Identicon {
+	return &Identicon{
+		sqSize: 70,
+		rows:   5,
+		cols:   5,
+		h:      sha1.New(),
+	}
+}
+
+func New7X7() *Identicon {
+	return &Identicon{
+		sqSize: 50,
+		rows:   7,
+		cols:   7,
+		h:      sha1.New(),
+	}
+}
+
+func (i *Identicon) Render(data string) []byte {
+	i.h.Write([]byte(data))
+	hVal := binary.BigEndian.Uint64(i.h.Sum(nil)[0:8])
 	colour := color.NRGBA{
 		R: uint8(hVal),
 		G: uint8(hVal >> 8),
@@ -46,7 +68,6 @@ func render(data string) {
 
 	for i := 0; i < rows*(cols+1)/2; i++ {
 		if hVal&1 == 1 {
-
 			for i := 0; i < sqSize; i++ {
 				x := xborder + sqx*sqSize
 				y := yborder + sqy*sqSize + i
@@ -66,9 +87,7 @@ func render(data string) {
 		}
 	}
 
-	i, err := os.Create(fmt.Sprintf("./test%s.png", string(data[10])))
-	if err != nil {
-		log.Println(err.Error())
-	}
-	png.Encode(i, img)
+	var buf bytes.Buffer
+	png.Encode(&buf, img)
+	return buf.Bytes()
 }
