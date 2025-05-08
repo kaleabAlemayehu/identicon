@@ -36,8 +36,8 @@ func New7X7() *Identicon {
 	}
 }
 
-func (i *Identicon) Render(data string) []byte {
-	i.h.Write([]byte(data))
+func (i *Identicon) Render(data []byte) []byte {
+	i.h.Write(data)
 	hVal := binary.BigEndian.Uint64(i.h.Sum(nil)[0:8])
 	colour := color.NRGBA{
 		R: uint8(hVal),
@@ -48,14 +48,13 @@ func (i *Identicon) Render(data string) []byte {
 
 	hVal >>= 24
 
+	sqx := 0
+	sqy := 0
+
 	const xborder = 35
 	const yborder = 35
 	const maxX = 420
 	const maxY = 420
-
-	sqx := 0
-	sqy := 0
-
 	sqSize := 50
 	rows := 7
 	cols := 7
